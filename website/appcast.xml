@@ -3,15 +3,15 @@
   <channel>
     <title>Clearly</title>
     <item>
-      <title>Version 1.1.0</title>
-      <sparkle:version>1.1.0</sparkle:version>
-      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <title>Version 1.1.1</title>
+      <sparkle:version>1.1.1</sparkle:version>
+      <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-      <pubDate>Wed, 18 Mar 2026 21:12:37 +0000</pubDate>
+      <pubDate>Wed, 18 Mar 2026 21:20:30 +0000</pubDate>
       <enclosure
-        url="https://github.com/Shpigford/clearly/releases/download/v1.1.0/Clearly.dmg"
-        sparkle:edSignature="s7YscFROoMaqzwBFAk5za+/+KS94lzUNeBqsaklF+v4gEl39OgqzPglwFBzEIPkcRZAk/3Rma7TUFYK0Yh6NDg=="
-        length="2807031"
+        url="https://github.com/Shpigford/clearly/releases/download/v1.1.1/Clearly.dmg"
+        sparkle:edSignature="7+LLPGpCkym+pNX1gEcxwg0+YnM8FL6zg6BV+m8J5T+WG8U472SzvXFN6MawpmmuOSA043R1gz5cKR9nNwUvBg=="
+        length="3209264"
         type="application/octet-stream"
       />
     </item>
