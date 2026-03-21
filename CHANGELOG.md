@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-03-21
+- Paste images directly into the editor — they're saved alongside your document and render in preview
+- Fixed markdown files not opening correctly from some apps due to a non-standard file type declaration
+
 ## [1.4.0] - 2026-03-20
 - Right-click to bold, italic, or format selected text
 - Math expressions render in preview using LaTeX syntax
