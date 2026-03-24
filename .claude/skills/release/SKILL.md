@@ -103,9 +103,9 @@ If yes, run:
 ./scripts/release-appstore.sh <VERSION>
 ```
 
-This handles: strip Sparkle from project → archive → export → upload to App Store Connect.
+This handles: strip Sparkle from project → archive → export → upload to App Store Connect → wait for build processing → create version → set "What's New" from CHANGELOG.md → attach build → submit for App Review. The entire flow is automated.
 
-If it fails, report the error and stop. Do NOT retry automatically.
+If it fails, report the error and stop. Do NOT retry automatically. Note: if the failure occurs after upload (during API submission), the build is already uploaded — tell the user they can finish manually in App Store Connect.
 
 ### Step 7: Push and report
 
