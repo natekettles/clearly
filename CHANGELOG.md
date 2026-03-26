@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-03-26
+- Diagnostic logs now survive force-quit and include previous session entries
+- Faster document opening with fewer redundant highlighting passes
+
 ## [1.7.1] - 2026-03-25
 - Fixed a hang that could occur when opening multiple documents at once
 - Export diagnostic logs from the Help menu for easier troubleshooting
