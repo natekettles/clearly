@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.7.4] - 2026-03-27
+- Opening multiple documents no longer freezes the editor when scroll sync is active
+- Faster syntax highlighting for documents with frontmatter
+
 ## [1.7.3] - 2026-03-26
 - Opening multiple documents at once no longer causes the app to hang
 - Appearance setting correctly applies your chosen light or dark mode
