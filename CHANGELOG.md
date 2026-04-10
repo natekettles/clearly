@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-04-10
+- Clear your recent files list with one click from the sidebar
+- Show or hide hidden files in the file explorer
+- Copy files and folders from the toolbar or sidebar right-click menu
+
 ## [1.13.1] - 2026-04-09
 - Fresh app icon and menubar icon
 
