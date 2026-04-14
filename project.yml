@@ -147,6 +147,7 @@ targets:
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: minimal
         ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES
       configs:
         Release:
           CODE_SIGN_STYLE: Manual
