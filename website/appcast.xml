@@ -3,6 +3,20 @@
   <channel>
     <title>Clearly</title>
     <item>
+      <title>Version 2.1.0</title>
+      <sparkle:version>2.1.0</sparkle:version>
+      <sparkle:shortVersionString>2.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Wed, 15 Apr 2026 18:55:52 +0000</pubDate>
+      <description><![CDATA[<ul><li>Pin favorite documents to the top of the sidebar for quick access</li><li>Set a preferred content width for comfortable reading on wide displays</li><li>Welcome view with a Getting Started guide greets new users on first launch</li><li>Middle-click a tab to close it</li><li>Toggle the Go to Line and Find bars open/closed with their keyboard shortcuts</li><li>Selected text stays highlighted when switching between editor and preview</li><li>Sidebar remembers its width between app restarts</li><li>Editor stays responsive on large markdown files</li><li>Sidebar and vault index skip heavy directories and respect .gitignore</li><li>Window controls stay accessible when the sidebar and tab bar are hidden</li><li>Location bookmarks validate directory access on restore</li></ul>]]></description>
+      <enclosure
+        url="https://github.com/Shpigford/clearly/releases/download/v2.1.0/Clearly.dmg"
+        sparkle:edSignature="CdzAOW50xXn+HudyVHFP/vN6BF/V6x2W4ZeHDBoKV0U7fBcc8K5jMSWz75yLxXRNiATDVQM90V6H9WLp66BDBw=="
+        length="16419790"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>Version 2.0.0</title>
       <sparkle:version>2.0.0</sparkle:version>
       <sparkle:shortVersionString>2.0.0</sparkle:shortVersionString>
