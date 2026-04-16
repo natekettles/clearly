@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-04-16
+- Hide frontmatter in preview mode with a new toggle in Settings
+- Empty folders now appear in the sidebar file tree
+- Drag the window from the top of preview mode
+- Sidebar width persists correctly on macOS 15
+- MCP server config now points to the correct binary
+- Opening a scratchpad no longer brings the main workspace window forward
+- Sparkle update checks disabled in debug builds
+
 ## [2.1.0] - 2026-04-15
 - Pin favorite documents to the top of the sidebar for quick access
 - Set a preferred content width for comfortable reading on wide displays
