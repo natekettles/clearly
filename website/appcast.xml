@@ -3,6 +3,20 @@
   <channel>
     <title>Clearly</title>
     <item>
+      <title>Version 2.2.0</title>
+      <sparkle:version>2.2.0</sparkle:version>
+      <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Thu, 16 Apr 2026 15:01:20 +0000</pubDate>
+      <description><![CDATA[<ul><li>Hide frontmatter in preview mode with a new toggle in Settings</li><li>Empty folders now appear in the sidebar file tree</li><li>Drag the window from the top of preview mode</li><li>Sidebar width persists correctly on macOS 15</li><li>MCP server config now points to the correct binary</li><li>Opening a scratchpad no longer brings the main workspace window forward</li><li>Sparkle update checks disabled in debug builds</li></ul>]]></description>
+      <enclosure
+        url="https://github.com/Shpigford/clearly/releases/download/v2.2.0/Clearly.dmg"
+        sparkle:edSignature="7YSdcOpUnohESH/jORMksEFU+HGyeHSqv6OV8RJivCG+h6gDtEVPWduVTcQVcCP4c751CqYrA/50eCe/P9vmDA=="
+        length="16422510"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>Version 2.1.0</title>
       <sparkle:version>2.1.0</sparkle:version>
       <sparkle:shortVersionString>2.1.0</sparkle:shortVersionString>
