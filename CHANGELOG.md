@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [2.3.0] - 2026-04-17
+## [2.3.0] - 2026-04-20
 - `clearly` command-line tool shipped — install from Settings → Command Line for terminal and MCP-client access to your vault
 - MCP server grows from 3 to 9 tools: `read_note`, `list_notes`, `get_headings`, `get_frontmatter` (reads) plus `create_note`, `update_note` (writes)
 - Structured JSON on every tool, input/output schemas published via MCP, stable error identifiers
