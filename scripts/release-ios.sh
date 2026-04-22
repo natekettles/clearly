@@ -62,6 +62,17 @@ xcodebuild -exportArchive \
 
 echo ""
 echo "✅ Clearly iOS v$VERSION (build $BUILD_NUMBER) uploaded."
+
+# ── 4. Tag and push ──────────────────────────────────────────────────────────
+TAG="ios-v$VERSION"
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "⚠️  Tag $TAG already exists — skipping tag step."
+else
+  echo "🏷️  Tagging $TAG and pushing..."
+  git tag -a "$TAG" -m "iOS release $VERSION (build $BUILD_NUMBER)"
+  git push origin "$TAG"
+fi
+
 echo ""
 echo "Next steps (manual, in App Store Connect):"
 echo "  1. Open https://appstoreconnect.apple.com → your iOS app → TestFlight"

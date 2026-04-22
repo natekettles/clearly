@@ -1,121 +1,173 @@
 ---
 name: release
-description: Determine the next version, update the marketing site, and run the full release pipeline.
+description: Determine the next version, update the marketing site, and run the full release pipeline for Mac or iOS.
 ---
 
-Cut a new release of Clearly. Determines the version from git history, updates the marketing site, and runs the release script.
+Cut a new release of Clearly. Mac and iOS ship independently — see `CLAUDE.md` "Versioning" and "Commit message rule". This skill picks a platform, derives the version from that platform's git tag history, and runs the matching release pipeline.
 
 ## Instructions
 
+### Step 0: Pick the platform
+
+Ask with `mcp__conductor__AskUserQuestion`:
+- question: "Which platform is this release for?"
+- header: "Release platform"
+- multiSelect: false
+- options:
+  - "Mac (Sparkle + optional App Store)"
+  - "iOS (TestFlight)"
+  - "Both (Mac first, then iOS)"
+
+If "Both", run the Mac flow end-to-end, then the iOS flow. If either platform fails, stop — do NOT auto-continue to the other.
+
 ### Step 1: Verify prerequisites
 
-1. Confirm `.env` exists in the project root. If it does not, stop and tell the user:
+Mac flow:
+1. `.env` exists at the project root. If not, stop and tell the user:
    "Missing `.env` file. Copy `.env.example` to `.env` and fill in APPLE_TEAM_ID, APPLE_ID, and SIGNING_IDENTITY_NAME."
-2. Confirm the notarytool keychain profile `AC_PASSWORD` works. If it does not, stop and tell the user to run:
+2. `notarytool` keychain profile `AC_PASSWORD` works. If not, stop and tell the user to run:
    ```bash
    xcrun notarytool store-credentials "AC_PASSWORD" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "<app-specific-password>"
    ```
-3. Confirm the working tree is clean (`git status --porcelain`). If there are uncommitted changes, stop and tell the user to commit or stash first.
-4. Confirm you are on the `main` branch. If not, stop and tell the user to switch to `main` first.
+
+iOS flow:
+1. `.env` exists and contains `APPLE_TEAM_ID`.
+
+Both flows:
+3. Working tree clean (`git status --porcelain`). If dirty, stop and ask the user to commit or stash.
+4. On the `main` branch. If not, stop.
 
 ### Step 2: Determine the next version
 
-1. Get the latest tag:
-   ```bash
-   git tag -l 'v*' | sort -V | tail -1
-   ```
+Pick the tag query and commit filter based on platform:
+
+| Platform | Latest tag query | Commit scope filter |
+|---|---|---|
+| Mac | `git tag -l 'v*' \| grep -vE '^ios-' \| sort -V \| tail -1` | `^\[(mac\|shared)\]` |
+| iOS | `git tag -l 'ios-v*' \| sort -V \| tail -1` | `^\[(ios\|shared)\]` |
+
+Steps:
+1. Get the latest tag for the platform (above).
 2. Get commits since that tag:
    ```bash
    git log <latest_tag>..HEAD --oneline --format='%s'
    ```
-3. If there are zero commits since the last tag, stop and tell the user there is nothing to release.
-4. Apply semver logic to the current latest version:
-   - If any commit message starts with `feat:` or `feat(` → **minor** bump (e.g. 1.1.2 → 1.2.0)
-   - If all commits are `fix:`, `chore:`, `docs:`, or similar → **patch** bump (e.g. 1.1.2 → 1.1.3)
-   - If any commit contains `BREAKING CHANGE` or uses a `!:` suffix → ask the user what version to use
-   - If the commit messages are ambiguous or do not follow conventional commits, use `mcp__conductor__AskUserQuestion` to ask:
+3. **Un-scoped commit guard.** If ANY commit in that range does NOT start with `[mac]`, `[ios]`, `[shared]`, or `[chore]`, stop and list those commits to the user:
+   > "Found commits without a scope prefix. Fix with `git commit --amend` or `git rebase -i` before releasing, or tell me to proceed anyway (commits will fall through the filter and may land in the wrong changelog)."
+   Use `mcp__conductor__AskUserQuestion` to ask whether to halt or proceed anyway.
+4. Filter commits with the platform's scope regex. If zero commits match after filtering, stop: "No commits scoped to <platform> since <tag>. Nothing to release." (Note: raw-range commits may still exist — they're for the *other* platform.)
+5. Apply semver logic to the scoped commit list:
+   - Any commit containing `feat:` or `feat(` after the scope → **minor** bump
+   - All commits are `fix:` / `chore:` / `docs:` style → **patch** bump
+   - Any commit contains `BREAKING CHANGE` or `!:` → ask the user
+   - Ambiguous / no conventional-commit markers → ask via `mcp__conductor__AskUserQuestion`:
      - question: "Commits since the last release don't clearly indicate the version bump. What version should this release be?"
      - header: "Release version"
      - multiSelect: false
-     - options with labels: "Patch (X.Y.Z+1)", "Minor (X.Y+1.0)", "Major (X+1.0.0)", "Custom"
+     - options: "Patch (X.Y.Z+1)", "Minor (X.Y+1.0)", "Major (X+1.0.0)", "Custom"
 
 ### Step 3: Confirm the version
 
-Always confirm the version before proceeding. Use `mcp__conductor__AskUserQuestion`:
-- question: "Release as v<VERSION>? Commits included:\n<commit list>"
+Confirm before proceeding. Show the tag (`v<VERSION>` for Mac, `ios-v<VERSION>` for iOS) and the scoped commit list. Use `mcp__conductor__AskUserQuestion`:
+- question: "Release as <TAG>? Commits included:\n<scoped commit list>"
 - header: "Confirm release"
 - multiSelect: false
 - options:
-  - "Yes, release v<VERSION>"
+  - "Yes, release <TAG>"
   - "Use a different version"
   - "Cancel"
 
-If the user picks "Use a different version", ask them for the version number. If they pick "Cancel", stop.
+If "Use a different version", ask for the version. If "Cancel", stop.
 
-### Step 3.5: Update CHANGELOG.md
+### Step 3.5: Update the changelog
 
-1. Check if `CHANGELOG.md` has an `## [Unreleased]` section with content (bullet points).
-2. If the `## [Unreleased]` section is empty or missing, draft entries from commits since the last tag:
-   - **Rewrite each entry to be user-facing.** Don't echo commit messages. Describe what changed from the user's perspective — what it enables, fixes, or improves.
+Changelog file depends on platform:
+- Mac → `CHANGELOG.md`
+- iOS → `CHANGELOG-iOS.md`
+
+1. Check if the changelog has an `## [Unreleased]` section with content.
+2. If `## [Unreleased]` is empty or missing, draft entries from the **scoped** commit list (same regex used above):
+   - **Rewrite each entry user-facing.** Don't echo commit messages. Describe what changed from the user's perspective.
    - Bad: "feat: synchronized scroll and fix editor font size"
    - Good: "Editor and preview scroll together so you always see what you're editing"
-   - Keep entries succinct (one line each). No technical jargon, no commit prefixes.
-   - Confirm the drafted entries with the user using `mcp__conductor__AskUserQuestion`.
+   - Strip the `[scope]` prefix and any `feat:`/`fix:` markers.
+   - Drop entries with no user-visible impact (internal refactors, test harness updates).
+   - Keep entries succinct — one line each, no technical jargon.
+   - Confirm the drafted entries with `mcp__conductor__AskUserQuestion`.
 3. Rename `## [Unreleased]` to `## [VERSION] - YYYY-MM-DD` (today's date).
-4. Add a new empty `## [Unreleased]` section above it.
+4. Add a new empty `## [Unreleased]` above it.
 
 ### Step 4: Update version strings
 
-1. Edit `project.yml`. Update BOTH `MARKETING_VERSION` entries (main app target and QuickLook extension target) to the new version.
-2. Edit `website/index.html`. Find the line containing `class="requires"` and replace the version:
+Updates depend on platform:
+
+**Mac:**
+1. Edit `project.yml`. Update `MARKETING_VERSION` in all three Mac-side targets: `Clearly`, `ClearlyQuickLook`, `ClearlyCLI`. Do NOT touch `Clearly-iOS`.
+2. Edit `website/index.html`. Update the `class="requires"` line:
    ```html
    <p class="requires">v<VERSION> &middot; Requires macOS Sonoma or later</p>
    ```
-3. Commit these changes:
+3. Commit:
    ```bash
    git add project.yml website/index.html CHANGELOG.md
-   git commit -m "Update marketing site version to v<VERSION>"
+   git commit -m "[mac] Update marketing site version to v<VERSION>"
+   git push
+   ```
+
+**iOS:**
+1. Edit `project.yml`. Update `MARKETING_VERSION` in the `Clearly-iOS` target only. Do NOT touch the Mac-side targets.
+2. No website edit (iOS isn't on the marketing site yet).
+3. Commit:
+   ```bash
+   git add project.yml CHANGELOG-iOS.md
+   git commit -m "[ios] Update iOS version to v<VERSION>"
    git push
    ```
 
 ### Step 5: Run the release script
 
+**Mac:**
 ```bash
 ./scripts/release.sh <VERSION>
 ```
+Handles: xcodegen → archive → export → DMG → notarize → staple → git tag `v<VERSION>` → appcast → push → GitHub Release.
 
-This handles: xcodegen → archive → export → DMG → notarize → staple → git tag → appcast → push → GitHub Release.
+**iOS:**
+```bash
+./scripts/release-ios.sh <VERSION>
+```
+Handles: xcodegen → archive → upload to App Store Connect (→ TestFlight) → git tag `ios-v<VERSION>` → push tag.
 
-Let it run to completion. If it fails, report the error output to the user and stop. Do NOT retry automatically.
+Let each script run to completion. On failure, report the error and stop. Do NOT retry automatically.
 
-### Step 6: App Store release (optional)
+### Step 6: App Store submission (Mac only, optional)
 
-After the Sparkle release succeeds, ask the user if they also want to submit to the App Store. Use `mcp__conductor__AskUserQuestion`:
+iOS stops at TestFlight for now — no App Store submission step.
+
+For Mac, after the Sparkle release succeeds, ask:
 - question: "Sparkle release complete. Also submit v<VERSION> to the App Store?"
 - header: "App Store"
 - multiSelect: false
-- options:
-  - "Yes, submit to App Store"
-  - "No, skip App Store"
+- options: "Yes, submit to App Store", "No, skip App Store"
 
 If yes:
 
 #### 6a: Generate App Store copy
 
-Before running the release script, generate and output three blocks of text for App Store Connect. Output as **raw, unformatted plain text** (no markdown formatting, no code fences) so the user can copy/paste directly into App Store Connect.
+Output three blocks as **raw plain text** (no markdown, no code fences) so the user can paste into App Store Connect:
 
-1. **What's New in This Version** — Read all entries from CHANGELOG.md from v1.0.0 through the current release version. Consolidate into a single list using `•` bullets. Each entry: feature name em-dashed with a short description. Keep it punchy and user-facing. This is the cumulative view for the App Store listing (the release script sets the per-version "What's New" automatically — this cumulative version is for the user to paste if they prefer it).
+1. **What's New in This Version** — Consolidate all entries from `CHANGELOG.md` from v1.0.0 through the current release. Use `•` bullets. Each entry: feature name em-dashed with a short description. The release script sets the per-version "What's New" automatically; this cumulative version is for the listing body.
 
-2. **Promotional Text** (170 characters max) — One sentence that captures what makes Clearly different. Tone: confident, no fluff.
+2. **Promotional Text** (170 characters max) — One sentence. Tone: confident, no fluff.
 
 3. **Description** — Full App Store description. Structure:
-   - Opening one-liner about what Clearly is
+   - Opening one-liner about Clearly
    - "No Electron. No bloat. No subscription." positioning line
-   - 4-5 short paragraphs, each with a leading phrase, covering: editing, preview, media/diagrams/math, export, and native macOS integration
-   - Bullet list of all current features
+   - 4-5 short paragraphs, each with a leading phrase, covering: editing, preview, media/diagrams/math, export, native macOS integration
+   - Bullet list of current features
    - Close with "One-time purchase. No subscription."
 
-Label each block clearly so the user knows which field to paste into.
+Label each block so the user knows which ASC field it's for.
 
 #### 6b: Run the App Store release script
 
@@ -123,9 +175,9 @@ Label each block clearly so the user knows which field to paste into.
 ./scripts/release-appstore.sh <VERSION>
 ```
 
-This handles: strip Sparkle from project → archive → export → upload to App Store Connect → wait for build processing → create version → set "What's New" from CHANGELOG.md → attach build → submit for App Review. The entire flow is automated.
+Handles: strip Sparkle from `project.yml` → archive → export → upload → wait for processing → create version → set "What's New" from `CHANGELOG.md` → attach build → submit for App Review.
 
-If it fails, report the error and stop. Do NOT retry automatically. Note: if the failure occurs after upload (during API submission), the build is already uploaded — tell the user they can finish manually in App Store Connect.
+On failure after upload, the build is already in ASC — tell the user they can finish manually.
 
 ### Step 7: Push and report
 
@@ -135,14 +187,19 @@ git push
 ```
 
 Tell the user:
-- The version that was released
-- Link: `https://github.com/Shpigford/clearly/releases/tag/v<VERSION>`
-- Whether the App Store submission was included
+- Platform and version released
+- Link:
+  - Mac: `https://github.com/Shpigford/clearly/releases/tag/v<VERSION>`
+  - iOS: no public release page; direct the user to App Store Connect → TestFlight
+- Whether App Store submission was included (Mac only)
 
 ## Important Rules
 
-- ALWAYS confirm the version with the user before proceeding
-- NEVER run the release script if `.env` is missing or the working tree is dirty
-- NEVER skip the marketing site version update
+- ALWAYS confirm the version before proceeding
+- NEVER run a release script if `.env` is missing or the working tree is dirty
+- NEVER skip the changelog update
+- NEVER update both `CHANGELOG.md` and `CHANGELOG-iOS.md` in the same release — one platform, one changelog
+- NEVER bump Mac `MARKETING_VERSION` entries during an iOS release (and vice versa)
 - If the release script fails, do NOT retry — report the error and stop
-- The release script handles git tagging and GitHub release creation — do not duplicate those steps
+- The release scripts handle git tagging — do not duplicate those steps
+- Un-scoped commits (no `[mac]`/`[ios]`/`[shared]`/`[chore]` prefix) halt the release until resolved

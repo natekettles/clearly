@@ -2,6 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Commit message rule (hard requirement)
+
+Mac and iOS release independently (see "Versioning" below). The `/release` skill builds per-platform changelogs by filtering commits on a scope prefix, so every commit MUST start with one:
+
+- `[mac]` — Mac-only changes. Paths: `Clearly/` excluding `Clearly/iOS/`, `ClearlyQuickLook/`, `ClearlyCLI/`, `scripts/release.sh`, `scripts/release-appstore.sh`, `website/`.
+- `[ios]` — iOS-only changes. Paths: `Clearly/iOS/`, `scripts/release-ios.sh`.
+- `[shared]` — affects both platforms. Paths: `Packages/ClearlyCore/`, `Shared/Resources/`, cross-cutting `project.yml` edits. Appears in both changelogs.
+- `[chore]` — dev tooling, docs, CI, meta. Excluded from both user-facing changelogs. Paths: `CLAUDE.md`, `.github/`, `docs/`, `.claude/`, test harnesses, non-release scripts.
+
+Conventional-commit markers (`feat:`, `fix:`) may follow the scope — `[ios] feat: add conflict resolver`. Not required; the release skill has a fallback for ambiguous cases.
+
+When a change touches paths from more than one scope, pick the most-specific user-visible scope. A bug fix that required a `ClearlyCore` tweak is still `[ios]` or `[mac]` if only that platform's users see the result. Use `[shared]` only when both platforms actually benefit. A missing or wrong scope means the commit lands in the wrong release notes or none at all — the release skill halts if it sees any un-scoped commit in the range.
+
+## Versioning
+
+Mac and iOS ship on independent cadences with independent version numbers and tags:
+
+- **Mac** (`Clearly` app, `ClearlyQuickLook`, `ClearlyCLI`): tags `v<VERSION>` (e.g. `v2.3.0`). Changelog: `CHANGELOG.md`. QuickLook and CLI versions move in lockstep with the Mac app.
+- **iOS** (`Clearly-iOS`): tags `ios-v<VERSION>` (e.g. `ios-v2.4.0`). Changelog: `CHANGELOG-iOS.md`. iOS started on TestFlight at 2.4.0 (ASC's version lane was already at 2.4.0 before the split — resetting to 1.0.0 wasn't worth nuking the app record).
+
+Version numbers on the two platforms are unrelated — Mac at 2.3.0 and iOS at 2.4.0 is coincidence, not alignment. Don't try to keep them in sync.
+
 ## What This Is
 
 Clearly is a native macOS markdown editor built with SwiftUI. It's a document-based app (`DocumentGroup`) that opens/saves `.md` files, with two modes: a syntax-highlighted editor and a WKWebView-based preview. It also ships a QuickLook extension for previewing markdown files in Finder.
