@@ -4,7 +4,7 @@ iOS release notes. Mac release notes live in `CHANGELOG.md`.
 
 ## [Unreleased]
 
-## [2.4.0] - 2026-04-22
+## [1.0.0] - 2026-04-22
 - Initial iOS/iPadOS TestFlight release
 - Browse your iCloud vault with a folder-based sidebar, same vault as the Mac app
 - Syntax-highlighted markdown editor with coordinated writes and autosave

@@ -20,9 +20,9 @@ When a change touches paths from more than one scope, pick the most-specific use
 Mac and iOS ship on independent cadences with independent version numbers and tags:
 
 - **Mac** (`Clearly` app, `ClearlyQuickLook`, `ClearlyCLI`): tags `v<VERSION>` (e.g. `v2.3.0`). Changelog: `CHANGELOG.md`. QuickLook and CLI versions move in lockstep with the Mac app.
-- **iOS** (`Clearly-iOS`): tags `ios-v<VERSION>` (e.g. `ios-v2.4.0`). Changelog: `CHANGELOG-iOS.md`. iOS started on TestFlight at 2.4.0 (ASC's version lane was already at 2.4.0 before the split — resetting to 1.0.0 wasn't worth nuking the app record).
+- **iOS** (`Clearly-iOS`): tags `ios-v<VERSION>` (e.g. `ios-v1.0.0`). Changelog: `CHANGELOG-iOS.md`.
 
-Version numbers on the two platforms are unrelated — Mac at 2.3.0 and iOS at 2.4.0 is coincidence, not alignment. Don't try to keep them in sync.
+Version numbers on the two platforms are unrelated — don't try to keep them in sync.
 
 ## What This Is
 
