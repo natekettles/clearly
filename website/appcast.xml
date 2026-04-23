@@ -3,6 +3,20 @@
   <channel>
     <title>Clearly</title>
     <item>
+      <title>Version 2.4.0</title>
+      <sparkle:version>2.4.0</sparkle:version>
+      <sparkle:shortVersionString>2.4.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Thu, 23 Apr 2026 16:31:24 +0000</pubDate>
+      <description><![CDATA[<ul><li>Native macOS shell: two-column NavigationSplitView with folder tree + detail pane</li><li>Sidebar inherits your System Settings accent color (like Finder)</li><li>New Recents and Tags sections in the sidebar</li><li>Customize each folder's icon and color; nested files inherit the look</li><li>⌘-click a sidebar row to open the note in a new tab</li><li>New Copy menu in the toolbar: copy path, filename, markdown, HTML, RTF, or plain text</li><li>Sample Document now opens an editable copy of the demo instead of a blank file</li><li>File → Open Recent lists recently opened documents</li><li>Window title shows the active document name, with a dot when unsaved</li><li>Sync Settings labels vault locations by capability (iCloud, Desktop & Documents, local-only)</li><li>Minimum macOS raised to Sequoia 15 so Clearly picks up Liquid Glass on macOS 26 automatically</li></ul>]]></description>
+      <enclosure
+        url="https://github.com/Shpigford/clearly/releases/download/v2.4.0/Clearly.dmg"
+        sparkle:edSignature="4nxvw0kf+ACUbUxYpipAWkLHRJ0TcSa/74YaZCoRgZEfPIZx5l5yFSRa0dwzfA8PA3u8PoZx2Dl7td7edFCJCQ=="
+        length="20299301"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>Version 2.3.0</title>
       <sparkle:version>2.3.0</sparkle:version>
       <sparkle:shortVersionString>2.3.0</sparkle:shortVersionString>
