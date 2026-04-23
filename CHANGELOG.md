@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-04-23
+- Native macOS shell: two-column NavigationSplitView with folder tree + detail pane
+- Sidebar inherits your System Settings accent color (like Finder)
+- New Recents and Tags sections in the sidebar
+- Customize each folder's icon and color; nested files inherit the look
+- ⌘-click a sidebar row to open the note in a new tab
+- New Copy menu in the toolbar: copy path, filename, markdown, HTML, RTF, or plain text
+- Sample Document now opens an editable copy of the demo instead of a blank file
+- File → Open Recent lists recently opened documents
+- Window title shows the active document name, with a dot when unsaved
+- Sync Settings labels vault locations by capability (iCloud, Desktop & Documents, local-only)
+- Minimum macOS raised to Sequoia 15 so Clearly picks up Liquid Glass on macOS 26 automatically
+
 ## [2.3.0] - 2026-04-20
 - `clearly` command-line tool shipped — install from Settings → Command Line for terminal and MCP-client access to your vault
 - MCP server grows from 3 to 9 tools: `read_note`, `list_notes`, `get_headings`, `get_frontmatter` (reads) plus `create_note`, `update_note` (writes)
