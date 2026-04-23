@@ -179,8 +179,7 @@ targets:
           PRODUCT_BUNDLE_IDENTIFIER: com.sabotage.clearly.dev.quicklook
           CODE_SIGN_STYLE: Automatic
         Release:
-          CODE_SIGN_STYLE: Manual
-          CODE_SIGN_IDENTITY: "Developer ID Application"
+          CODE_SIGN_STYLE: Automatic
 
   ClearlyCLI:
     type: tool
