@@ -3,6 +3,20 @@
   <channel>
     <title>Clearly</title>
     <item>
+      <title>Version 2.5.0</title>
+      <sparkle:version>2.5.0</sparkle:version>
+      <sparkle:shortVersionString>2.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Fri, 24 Apr 2026 18:50:04 +0000</pubDate>
+      <description><![CDATA[<ul><li>Paste and drop images directly into the editor</li><li>Drag and drop files and folders in the sidebar to reorganize</li><li>Adjust sidebar text size in Settings</li><li>New setting to hide the menu bar icon</li><li>CLI install no longer needs sudo or Terminal — installs to ~/.local/bin</li><li>Recoverable CLI install flow with clearer diagnostics</li><li>Public changelog page with in-app links</li><li>Fixed pasted text disappearing in the editor until you scrolled</li><li>Fixed ⌘+H removing the Dock icon instead of hiding windows</li><li>Fixed third-party cloud folders being labeled as iCloud in Sync settings</li><li>Fixed Settings not coming to the front when opened from the menu bar icon</li><li>Fixed inline LaTeX rendering on dollar-sign currency amounts</li></ul>]]></description>
+      <enclosure
+        url="https://github.com/Shpigford/clearly/releases/download/v2.5.0/Clearly.dmg"
+        sparkle:edSignature="tD+vh8bPobyLfLutEdyg4Mei2dWFldRD1W1B3WntzPDYlNygqyWzGDqiBqGuSh/Qkb3DjVIPSFSKohOUECRgCw=="
+        length="20498450"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>Version 2.4.0</title>
       <sparkle:version>2.4.0</sparkle:version>
       <sparkle:shortVersionString>2.4.0</sparkle:shortVersionString>
