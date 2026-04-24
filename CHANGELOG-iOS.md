@@ -4,6 +4,11 @@ iOS release notes. Mac release notes live in `CHANGELOG.md`.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-24
+- Paste and drop images directly into the editor
+- Public changelog page with in-app links
+- Fixed inline LaTeX rendering on dollar-sign currency amounts
+
 ## [1.0.0] - 2026-04-22
 - Initial iOS/iPadOS TestFlight release
 - Browse your iCloud vault with a folder-based sidebar, same vault as the Mac app
