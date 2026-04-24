@@ -103,7 +103,11 @@ struct EditorView: NSViewRepresentable {
                 userInfo: ["target": target, "heading": heading as Any]
             )
         }
-
+        textView.onPasteRequiresSave = {
+            let ws = WorkspaceManager.shared
+            _ = ws.saveCurrentFile()
+            return ws.currentFileURL
+        }
         scrollView.documentView = textView
 
         // Line number gutter (plain NSView, not NSRulerView)
@@ -352,7 +356,7 @@ struct EditorView: NSViewRepresentable {
         var highlighter: MarkdownSyntaxHighlighter?
         var lastEditedRange: NSRange?
         var lastReplacementLength: Int = 0
-        weak var textView: NSTextView?
+        weak var textView: ClearlyTextView?
         weak var gutterView: LineNumberGutterView?
         var lastMode: ViewMode?
         var lastPositionSyncID: String?
@@ -451,7 +455,7 @@ struct EditorView: NSViewRepresentable {
 
         @objc func flushEditorBuffer(_ notification: Notification) {
             guard let textView else { return }
-            parent.text = textView.string
+            commitTextViewContents(textView)
         }
 
         @objc func textViewFrameDidChange(_ notification: Notification) {
@@ -635,8 +639,13 @@ struct EditorView: NSViewRepresentable {
                 guard gen == self.editGeneration else { return }
                 guard self.lastPositionSyncID == scheduledPositionSyncID else { return }
                 guard let textView = self.textView else { return }
-                self.parent.text = textView.string
+                self.commitTextViewContents(textView)
             }
+        }
+
+        private func commitTextViewContents(_ textView: NSTextView) {
+            parent.text = textView.string
+            WorkspaceManager.shared.contentDidChange()
         }
 
         // MARK: - Wiki-Link Auto-Complete
