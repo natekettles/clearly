@@ -3,6 +3,20 @@
   <channel>
     <title>Clearly</title>
     <item>
+      <title>Version 2.7.0</title>
+      <sparkle:version>2.7.0</sparkle:version>
+      <sparkle:shortVersionString>2.7.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Mon, 27 Apr 2026 19:27:18 +0000</pubDate>
+      <description><![CDATA[<ul><li>New experimental live preview editor — WYSIWYG-style markdown editing</li><li>Sidebar context menu now offers Copy Path, Relative Path, and Wiki Link</li><li>Preview outline navigation scrolls reliably and no longer leaves stray highlights after switching back to edit mode</li><li>⌘W now correctly closes the Settings window when open, instead of the active document</li></ul>]]></description>
+      <enclosure
+        url="https://github.com/Shpigford/clearly/releases/download/v2.7.0/Clearly.dmg"
+        sparkle:edSignature="1NOaYVL1We7JNXgxoVAJFOffQsJgM4h5Nvz8QwcAc8vnO1PEiiHJvdepTtttN5QV8nyTmQWL2798kCtG7LYZBg=="
+        length="21753937"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>Version 2.6.1</title>
       <sparkle:version>2.6.1</sparkle:version>
       <sparkle:shortVersionString>2.6.1</sparkle:shortVersionString>
