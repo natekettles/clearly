@@ -9,3 +9,4 @@ build/
 .env
 .context/
 __pycache__/
+ClearlyLiveEditorWeb/node_modules/
