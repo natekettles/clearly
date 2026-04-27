@@ -10,18 +10,12 @@
     <link rel="manifest" href="/site.webmanifest">
 
     <title>Changelog — Clearly</title>
-    <meta name="description" content="Release notes for Clearly — a native markdown editor and knowledge base for Mac and iOS.">
+    <meta name="description" content="Release notes for Clearly — a native markdown editor and knowledge base for Mac and iPad.">
     <meta property="og:title" content="Changelog — Clearly">
-    <meta property="og:description" content="Release notes for Clearly. Mac and iOS, newest first.">
-    <meta property="og:image" content="https://clearly.md/meta.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="675">
-    <meta property="og:type" content="website">
+    <meta property="og:description" content="Release notes for Clearly. Mac and iPad, newest first.">
+    <meta property="og:image" content="https://clearly.md/icon.png">
     <meta property="og:url" content="https://clearly.md/changelog">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Changelog — Clearly">
-    <meta name="twitter:description" content="Release notes for Clearly. Mac and iOS, newest first.">
-    <meta name="twitter:image" content="https://clearly.md/meta.jpg">
 
     <link rel="preconnect" href="https://rsms.me" crossorigin>
     <link href="https://rsms.me/inter/inter.css" rel="stylesheet">
@@ -67,13 +61,35 @@
                     Changelog
                 </h1>
                 <p class="mt-3 text-zinc-400 text-pretty max-w-[60ch]">
-                    Everything that's shipped in Clearly — Mac and iOS, newest first.
+                    Everything that's shipped in Clearly — Mac and iPad, newest first.
                 </p>
             </div>
         </section>
 
         <section class="pb-24">
             <div class="max-w-3xl mx-auto px-6 space-y-4">
+                <article id="mac-v2.6.0" class="rounded-xl outline-1 -outline-offset-1 outline-white/10 bg-white/[0.02] p-6 md:p-8">
+                    <header class="flex flex-wrap items-center gap-3 mb-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-300 ring-1 ring-inset ring-blue-500/20">Mac</span>
+                        <h2 class="text-lg font-medium text-white font-mono tracking-tight">v2.6.0</h2>
+                        <span class="ml-auto text-sm text-zinc-500 font-mono">2026-04-27</span>
+                    </header>
+                    <ul class="space-y-2 text-sm text-zinc-400 list-none pl-0">
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">LLM Wiki vaults — turn any folder into an AI-curated knowledge base with AGENTS.md, index.md, and log.md</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Capture (⌃⌘I): paste a URL or text and the agent files it as new notes</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Chat (⌃⌘A): ask questions about your vault with semantic retrieval and cited sources; "File as Note" for keepers</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Review: runs once a day to propose tidy-ups; "Review ready" badge above the log sidebar</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Diff-review sheet on every agent-proposed change — accept or reject per file before anything lands</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Log timeline sidebar (⌃⌘T) shows every accepted operation with timestamp, kind, and changed files</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Powered by your local Claude Code or Codex CLI subscription — no API key, no extra billing</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Settings → Wiki tab to pick a runner and see install status</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">File → New LLM Wiki seeds a fresh vault; right-click any vault for Convert to LLM Wiki…</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Sidebar marks wiki vaults with a book icon and WIKI badge</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Clickable [[wiki-links]] in chat answers</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">New `semantic_search` MCP tool for embedding-based retrieval from any agent</li>
+                    <li class="relative pl-5 before:content-[''] before:absolute before:left-1 before:top-[0.55rem] before:size-1 before:rounded-full before:bg-zinc-600">Marketing site links now show a preview image when shared</li>
+                    </ul>
+                </article>
                 <article id="mac-v2.5.0" class="rounded-xl outline-1 -outline-offset-1 outline-white/10 bg-white/[0.02] p-6 md:p-8">
                     <header class="flex flex-wrap items-center gap-3 mb-4">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-300 ring-1 ring-inset ring-blue-500/20">Mac</span>
