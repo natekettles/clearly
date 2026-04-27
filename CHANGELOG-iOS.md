@@ -4,6 +4,10 @@ iOS release notes. Mac release notes live in `CHANGELOG.md`.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-27
+- New unified sidebar showing files and folders inline, mirroring the Mac layout
+- Vault picker no longer flashes briefly when the app launches
+
 ## [1.1.0] - 2026-04-24
 - Paste and drop images directly into the editor
 - Public changelog page with in-app links
