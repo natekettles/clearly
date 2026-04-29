@@ -738,6 +738,14 @@ final class ClearlyAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             menuItem.state = (menuItem.representedObject as? String) == current ? .on : .off
             return true
         }
+        if menuItem.action == #selector(switchToEditorAction(_:)) {
+            menuItem.state = WorkspaceManager.shared.currentViewMode == .edit ? .on : .off
+            return true
+        }
+        if menuItem.action == #selector(switchToPreviewAction(_:)) {
+            menuItem.state = WorkspaceManager.shared.currentViewMode == .preview ? .on : .off
+            return true
+        }
         return true
     }
 
@@ -1207,28 +1215,6 @@ struct OutlineToggleCommand: View {
             outlineState?.toggle()
         }
         .keyboardShortcut("o", modifiers: [.command, .shift])
-    }
-}
-
-struct ViewModeCommands: View {
-    @FocusedValue(\.viewMode) var mode
-    @AppStorage("editorEngine") private var editorEngineRawValue = EditorEngine.classic.rawValue
-
-    private var editorEngine: EditorEngine {
-        EditorEngine.resolved(rawValue: editorEngineRawValue)
-    }
-
-    var body: some View {
-        Button(editorEngine == .livePreviewExperimental ? "Live Preview" : "Editor") {
-            mode?.wrappedValue = .edit
-        }
-        .keyboardShortcut("1", modifiers: .command)
-
-        Button("Preview") {
-            mode?.wrappedValue = .preview
-        }
-        .disabled(editorEngine == .livePreviewExperimental)
-        .keyboardShortcut("2", modifiers: .command)
     }
 }
 
