@@ -4,6 +4,12 @@ iOS release notes. Mac release notes live in `CHANGELOG.md`.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-28
+- Long-press a file in the sidebar for Move, Duplicate, Share, and inline Rename
+- Click any mermaid diagram in preview to zoom it full-screen
+- Pasting a URL now keeps it as a link instead of failing an image download
+- Hardened large-file handling to keep memory in check when opening big notes
+
 ## [1.2.0] - 2026-04-27
 - New unified sidebar showing files and folders inline, mirroring the Mac layout
 - Vault picker no longer flashes briefly when the app launches
