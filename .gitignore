@@ -11,3 +11,6 @@ build/
 __pycache__/
 ClearlyLiveEditorWeb/node_modules/
 Packages/ClearlyCore/Package.resolved
+
+# Claude Code session data and worktrees
+.claude/
