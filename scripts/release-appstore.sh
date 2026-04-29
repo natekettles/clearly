@@ -237,19 +237,49 @@ while [ -z "$BUILD_ID" ]; do
 done
 echo "   Build ready: $BUILD_ID"
 
-# Check for existing draft version
-VERSION_ID=$(asc_api GET "/apps/$APP_ID/appStoreVersions?filter[versionString]=$VERSION&filter[platform]=MAC_OS&fields[appStoreVersions]=versionString,appStoreState" | \
-  python3 -c "
-import sys,json
+# Find a reusable in-flight version row, or create a new one.
+# Apple allows only one in-flight version per app+platform. A previous
+# version stuck in an editable state (e.g. DEVELOPER_REJECTED after you
+# cancelled review) blocks POST /appStoreVersions with a 409 even when
+# the versionString differs. Reuse such rows by PATCH'ing the
+# versionString to the target.
+EDITABLE_STATES="PREPARE_FOR_SUBMISSION DEVELOPER_ACTION_NEEDED DEVELOPER_REJECTED REJECTED METADATA_REJECTED INVALID_BINARY"
+LOCKED_STATES="WAITING_FOR_REVIEW IN_REVIEW PENDING_DEVELOPER_RELEASE PENDING_APPLE_RELEASE PROCESSING_FOR_DISTRIBUTION"
+
+ROW_INFO=$(asc_api GET "/apps/$APP_ID/appStoreVersions?filter[platform]=MAC_OS&fields[appStoreVersions]=versionString,appStoreState&limit=20" | \
+  EDITABLE="$EDITABLE_STATES" LOCKED="$LOCKED_STATES" python3 -c "
+import sys,json,os
+editable = set(os.environ['EDITABLE'].split())
+locked = set(os.environ['LOCKED'].split())
 data = json.load(sys.stdin)['data']
-drafts = [v for v in data if v['attributes'].get('appStoreState') in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_ACTION_NEEDED')]
-print(drafts[0]['id'] if drafts else '')
+for v in data:
+    s = v['attributes'].get('appStoreState')
+    if s in editable or s in locked:
+        print(f\"{v['id']}|{v['attributes'].get('versionString','')}|{s}\")
+        break
 ")
 
-if [ -n "$VERSION_ID" ]; then
-  echo "   Using existing draft version: $VERSION_ID"
+if [ -n "$ROW_INFO" ]; then
+  IFS='|' read -r EXISTING_ID EXISTING_VERSION EXISTING_STATE <<< "$ROW_INFO"
+  if [[ " $LOCKED_STATES " == *" $EXISTING_STATE "* ]]; then
+    echo "❌ Version $EXISTING_VERSION is in $EXISTING_STATE — already with Apple."
+    echo "   Wait for review to finish, or cancel it in App Store Connect, then re-run."
+    exit 1
+  fi
+  VERSION_ID="$EXISTING_ID"
+  if [ "$EXISTING_VERSION" != "$VERSION" ]; then
+    echo "   Repurposing $EXISTING_STATE row $VERSION_ID: $EXISTING_VERSION -> $VERSION"
+    asc_api PATCH "/appStoreVersions/$VERSION_ID" "{
+      \"data\": {
+        \"type\": \"appStoreVersions\",
+        \"id\": \"$VERSION_ID\",
+        \"attributes\": { \"versionString\": \"$VERSION\" }
+      }
+    }" > /dev/null
+  else
+    echo "   Using existing $EXISTING_STATE version: $VERSION_ID"
+  fi
 else
-  # Create new version
   VERSION_ID=$(asc_api POST "/appStoreVersions" "{
     \"data\": {
       \"type\": \"appStoreVersions\",
