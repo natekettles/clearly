@@ -705,6 +705,7 @@ struct ClearlyApp: App {
     @NSApplicationDelegateAdaptor(ClearlyAppDelegate.self) var appDelegate
     @AppStorage("themePreference") private var themePreference = "system"
     @AppStorage("showMenuBarIcon") private var showMenuBarIcon = true
+    @AppStorage(LayoutMode.storageKey) private var layoutMode: LayoutMode = .twoPane
     @State private var scratchpadManager = ScratchpadManager.shared
     private let workspace = WorkspaceManager.shared
     #if canImport(Sparkle)
@@ -750,7 +751,7 @@ struct ClearlyApp: App {
             // Replace New/Open with our own
             CommandGroup(replacing: .newItem) {
                 Button("New Document") {
-                    workspace.createUntitledDocument()
+                    workspace.createNewNoteInActiveContext()
                 }
                 .keyboardShortcut("n", modifiers: .command)
 
@@ -817,6 +818,18 @@ struct ClearlyApp: App {
                 Button(workspace.showHiddenFiles ? "Hide Hidden Files" : "Show Hidden Files") {
                     workspace.toggleShowHiddenFiles()
                 }
+
+                Divider()
+
+                Button("Two-Pane Layout") {
+                    layoutMode = .twoPane
+                }
+                .keyboardShortcut("2", modifiers: [.command, .option])
+
+                Button("Three-Pane Layout") {
+                    layoutMode = .threePane
+                }
+                .keyboardShortcut("3", modifiers: [.command, .option])
             }
 
             CommandGroup(after: .textEditing) {

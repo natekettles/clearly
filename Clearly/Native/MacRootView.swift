@@ -2,12 +2,17 @@ import SwiftUI
 import AppKit
 import ClearlyCore
 
-/// Root view for the native macOS shell — two-column `NavigationSplitView`:
-/// sidebar holds the folder-and-file outline, detail holds the editor +
-/// preview + toolbar. Clicking a file in the sidebar opens it in the
-/// detail; clicking a folder just expands/collapses it.
+/// Root view for the native macOS shell. By default a two-column
+/// `NavigationSplitView`: sidebar holds the folder-and-file outline, detail
+/// holds the editor + preview + toolbar. Clicking a file in the sidebar
+/// opens it in the detail; clicking a folder just expands/collapses it.
+///
+/// When `@AppStorage("layoutMode")` is set to `.threePane`, a Notes-style
+/// middle column (`MacNoteListView`) appears between sidebar and editor,
+/// listing notes inside the currently-selected folder.
 struct MacRootView: View {
     @Bindable var workspace: WorkspaceManager
+    @AppStorage(LayoutMode.storageKey) private var layoutMode: LayoutMode = .twoPane
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedFileURL: URL? = nil
     @State private var positionSyncID: String = UUID().uuidString
@@ -33,48 +38,53 @@ struct MacRootView: View {
 
     @ViewBuilder
     private var splitView: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
-            MacFolderSidebar(
-                workspace: workspace,
-                selectedFileURL: $selectedFileURL
-            )
-            .background(SidebarClickModifierWatcher { mods, time in
-                lastSidebarClickModifiers = mods
-                lastSidebarClickTime = time
-            })
-            .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 360)
-        } detail: {
-            VStack(spacing: 0) {
-                MacTabBar(workspace: workspace)
-                MacDetailColumn(
-                    workspace: workspace,
-                    findState: findState,
-                    outlineState: outlineState,
-                    backlinksState: backlinksState,
-                    jumpToLineState: jumpToLineState,
-                    wikiController: wikiController,
-                    wikiChat: wikiChat,
-                    wikiLog: wikiLog,
-                    wikiCapture: wikiCapture,
-                    positionSyncID: $positionSyncID,
-                    showFormatPopover: $showFormatPopover
-                )
-            }
-            .toolbar {
-                MacDetailToolbar(
-                    workspace: workspace,
-                    findState: findState,
-                    outlineState: outlineState,
-                    backlinksState: backlinksState,
-                    wikiController: wikiController,
-                    showFormatPopover: $showFormatPopover
-                )
+        Group {
+            switch layoutMode {
+            case .twoPane:
+                NavigationSplitView(columnVisibility: $columnVisibility) {
+                    sidebarColumn
+                } detail: {
+                    detailColumn
+                }
+            case .threePane:
+                NavigationSplitView(columnVisibility: $columnVisibility) {
+                    sidebarColumn
+                } content: {
+                    MacNoteListView(
+                        workspace: workspace,
+                        selectedNoteURL: $selectedFileURL
+                    )
+                    // Same probe as the sidebar — lets the existing
+                    // `onChange(of: selectedFileURL)` handler route
+                    // cmd-clicks to `openFileInNewTab` when the user
+                    // picks a row in the list pane.
+                    .background(SidebarClickModifierWatcher { mods, time in
+                        lastSidebarClickModifiers = mods
+                        lastSidebarClickTime = time
+                    })
+                    .navigationSplitViewColumnWidth(min: 220, ideal: 280, max: 420)
+                } detail: {
+                    detailColumn
+                }
             }
         }
         .navigationTitle(windowTitle)
         .navigationDocument(workspace.currentFileURL ?? URL(fileURLWithPath: "/"))
         .onChange(of: selectedFileURL) { _, newURL in
             guard let url = newURL else { return }
+            // Keep the 3-pane middle list in sync with sidebar navigation:
+            // selecting a file in the sidebar moves the active folder to
+            // its parent so the middle list scrolls to and highlights the
+            // file. Cheap no-op in 2-pane (selectedFolderURL just persists
+            // wherever the user was last). Skip pinned/recents that may
+            // live across vaults — `vaultIndexAndRelativePath` will reject
+            // anything outside a registered vault, so we can be liberal.
+            let parent = url.deletingLastPathComponent()
+            if workspace.selectedFolderURL?.standardizedFileURL != parent.standardizedFileURL,
+               workspace.vaultIndexAndRelativePath(for: parent) != nil {
+                workspace.setSelectedFolder(parent)
+            }
+
             guard workspace.currentFileURL != url else { return }
             let isCmdClick: Bool = {
                 guard let t = lastSidebarClickTime, Date().timeIntervalSince(t) < 0.25 else { return false }
@@ -92,6 +102,49 @@ struct MacRootView: View {
             if selectedFileURL != newURL {
                 selectedFileURL = newURL
             }
+        }
+    }
+
+    @ViewBuilder
+    private var sidebarColumn: some View {
+        MacFolderSidebar(
+            workspace: workspace,
+            selectedFileURL: $selectedFileURL
+        )
+        .background(SidebarClickModifierWatcher { mods, time in
+            lastSidebarClickModifiers = mods
+            lastSidebarClickTime = time
+        })
+        .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 360)
+    }
+
+    @ViewBuilder
+    private var detailColumn: some View {
+        VStack(spacing: 0) {
+            MacTabBar(workspace: workspace)
+            MacDetailColumn(
+                workspace: workspace,
+                findState: findState,
+                outlineState: outlineState,
+                backlinksState: backlinksState,
+                jumpToLineState: jumpToLineState,
+                wikiController: wikiController,
+                wikiChat: wikiChat,
+                wikiLog: wikiLog,
+                wikiCapture: wikiCapture,
+                positionSyncID: $positionSyncID,
+                showFormatPopover: $showFormatPopover
+            )
+        }
+        .toolbar {
+            MacDetailToolbar(
+                workspace: workspace,
+                findState: findState,
+                outlineState: outlineState,
+                backlinksState: backlinksState,
+                wikiController: wikiController,
+                showFormatPopover: $showFormatPopover
+            )
         }
     }
 

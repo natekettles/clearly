@@ -184,6 +184,9 @@ struct MacFolderSidebar: View {
                 isExpanded: locationExpandedBinding(location),
                 isWiki: location.isWiki
             )
+            .simultaneousGesture(TapGesture().onEnded {
+                workspace.setSelectedFolder(location.url)
+            })
             .contextMenu {
                 Button("New File", systemImage: "doc.badge.plus") {
                     createNewFile(in: location.url)
@@ -336,15 +339,23 @@ struct MacFolderSidebar: View {
         if node.isDirectory {
             let folderTint = workspace.folderColor(for: node.url).map(Color.init(nsColor:))
             let folderIcon = workspace.folderIcon(for: node.url) ?? "folder"
+            // Selected when this folder is driving the 3-pane middle list.
+            // In 2-pane mode `selectedFolderURL` may still hold the user's
+            // last-clicked folder, but a subtle pill is acceptable cross-mode
+            // and gives a useful "you are here" signal in the tree.
+            let isSelectedFolder = workspace.selectedFolderURL?.standardizedFileURL == node.url.standardizedFileURL
             SidebarRowLabel(
                 title: node.name,
                 systemImage: folderIcon,
                 iconTint: folderTint,
-                isSelected: false
+                isSelected: isSelectedFolder
             )
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
-            .listRowBackground(SelectionPill(tint: folderTint, isSelected: false))
+            .listRowBackground(SelectionPill(tint: folderTint, isSelected: isSelectedFolder))
+            .simultaneousGesture(TapGesture().onEnded {
+                workspace.setSelectedFolder(node.url)
+            })
             .contextMenu { folderContextMenu(url: node.url) }
             .popover(isPresented: popoverBinding(for: node.url), arrowEdge: .trailing) {
                 FolderCustomizerView(url: node.url, workspace: workspace)

@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Notes-style 3-pane layout: optional middle column listing notes in the selected folder with title + 1-line preview. Toggle via Settings → General → Layout, ⌥⌘2 / ⌥⌘3, or the View menu. Sort by date or title and toggle subfolder inclusion per folder.
 
 ## [2.9.0] - 2026-04-28
 - Click any mermaid diagram in preview to zoom it full-screen
