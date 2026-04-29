@@ -115,6 +115,7 @@ struct LiveEditorView: NSViewRepresentable {
         private var lastKnownDocumentID: UUID?
         private var lastThemeSignature = ""
         private var lastFindQuery = ""
+        private var lastFindSignature = ""
         private var lastFindVisibility = false
         private var findCancellables = Set<AnyCancellable>()
         /// Local event monitor that intercepts Cmd+V and routes it through
@@ -181,8 +182,7 @@ struct LiveEditorView: NSViewRepresentable {
                           event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
                           event.charactersIgnoringModifiers == "v",
                           let webView = self.webView,
-                          webView.window?.isKeyWindow == true,
-                          let text = NSPasteboard.general.string(forType: .string) else {
+                          webView.window?.isKeyWindow == true else {
                         return event
                     }
                     // Only redirect paste into the editor when the webview (or one
@@ -193,8 +193,15 @@ struct LiveEditorView: NSViewRepresentable {
                           fr.isDescendant(of: webView) else {
                         return event
                     }
-                    self.insertText(text)
-                    return nil  // Consume — prevents WKWebView's broken native paste
+                    let pasteboard = NSPasteboard.general
+                    if self.tryInsertImageFromPasteboard(pasteboard) != nil {
+                        return nil  // Consume — image was written + markdown inserted
+                    }
+                    if let text = pasteboard.string(forType: .string) {
+                        self.insertText(text)
+                        return nil  // Consume — prevents WKWebView's broken native paste
+                    }
+                    return event
                 }
             }
 
@@ -206,6 +213,16 @@ struct LiveEditorView: NSViewRepresentable {
                 }
                 findState.editorNavigateToPrevious = { [weak self] in
                     self?.call(function: "applyCommand", payload: ["command": "findPrevious"])
+                }
+                findState.editorPerformReplace = { [weak self, weak findState] in
+                    guard let self, let findState else { return }
+                    self.syncFindState(findState, force: true)
+                    self.call(function: "applyCommand", payload: ["command": "replaceCurrent"])
+                }
+                findState.editorPerformReplaceAll = { [weak self, weak findState] in
+                    guard let self, let findState else { return }
+                    self.syncFindState(findState, force: true)
+                    self.call(function: "applyCommand", payload: ["command": "replaceAll"])
                 }
             }
 
@@ -247,19 +264,40 @@ struct LiveEditorView: NSViewRepresentable {
             }
 
             if parent.findState?.isVisible == true {
-                let query = parent.findState?.query ?? ""
-                if query != lastFindQuery || !lastFindVisibility {
-                    lastFindQuery = query
-                    lastFindVisibility = true
-                    call(function: "setFindQuery", payload: ["query": query])
+                if let findState = parent.findState {
+                    if !lastFindVisibility {
+                        lastFindVisibility = true
+                    }
+                    syncFindState(findState)
                 }
             } else {
                 if lastFindVisibility || !lastFindQuery.isEmpty {
                     lastFindQuery = ""
+                    lastFindSignature = ""
                     lastFindVisibility = false
                     call(function: "setFindQuery", payload: ["query": ""])
                 }
             }
+        }
+
+        private func syncFindState(_ state: FindState, force: Bool = false) {
+            let query = state.isVisible && state.activeMode == .edit ? state.query : ""
+            let signature = [
+                query,
+                state.replacementText,
+                state.caseSensitive ? "1" : "0",
+                state.useRegex ? "1" : "0"
+            ].joined(separator: "\u{1f}")
+            guard force || signature != lastFindSignature else { return }
+            lastFindQuery = query
+            lastFindSignature = signature
+            call(function: "setFindQuery", payload: [
+                "query": query,
+                "replacement": state.replacementText,
+                "caseSensitive": state.caseSensitive,
+                "wholeWord": false,
+                "useRegex": state.useRegex
+            ])
         }
 
         func observeFindState(_ state: FindState) {
@@ -267,24 +305,43 @@ struct LiveEditorView: NSViewRepresentable {
 
             state.$query
                 .removeDuplicates()
-                .sink { [weak self] query in
-                    guard let self,
-                          state.isVisible,
-                          state.activeMode == .edit else { return }
-                    self.lastFindQuery = query
-                    self.call(function: "setFindQuery", payload: ["query": query])
+                .sink { [weak self, weak state] _ in
+                    DispatchQueue.main.async {
+                        guard let self, let state, state.isVisible, state.activeMode == .edit else { return }
+                        self.syncFindState(state)
+                    }
                 }
                 .store(in: &findCancellables)
 
             state.$isVisible
                 .removeDuplicates()
-                .sink { [weak self] visible in
-                    guard let self else { return }
-                    self.lastFindVisibility = visible
-                    (self.webView as? LiveEditorWebView)?.allowsDOMFocusForwarding = !visible
-                    let query = visible && state.activeMode == .edit ? state.query : ""
-                    self.lastFindQuery = query
-                    self.call(function: "setFindQuery", payload: ["query": query])
+                .sink { [weak self, weak state] visible in
+                    DispatchQueue.main.async {
+                        guard let self, let state else { return }
+                        self.lastFindVisibility = visible
+                        (self.webView as? LiveEditorWebView)?.allowsDOMFocusForwarding = !visible
+                        self.syncFindState(state, force: true)
+                    }
+                }
+                .store(in: &findCancellables)
+
+            Publishers.CombineLatest(state.$caseSensitive, state.$useRegex)
+                .dropFirst()
+                .sink { [weak self, weak state] _, _ in
+                    DispatchQueue.main.async {
+                        guard let self, let state, state.isVisible, state.activeMode == .edit else { return }
+                        self.syncFindState(state)
+                    }
+                }
+                .store(in: &findCancellables)
+
+            state.$replacementText
+                .removeDuplicates()
+                .sink { [weak self, weak state] _ in
+                    DispatchQueue.main.async {
+                        guard let self, let state, state.isVisible, state.activeMode == .edit else { return }
+                        self.syncFindState(state)
+                    }
                 }
                 .store(in: &findCancellables)
         }
@@ -356,6 +413,54 @@ struct LiveEditorView: NSViewRepresentable {
             call(function: "insertText", payload: ["text": text])
         }
 
+        /// Reads an image from the pasteboard, writes it as a sibling file
+        /// next to the open document, and inserts a markdown image token via
+        /// CodeMirror's dispatch. Returns the markdown token on success, nil
+        /// when there's no usable image or no document URL.
+        fileprivate func tryInsertImageFromPasteboard(_ pasteboard: NSPasteboard) -> String? {
+            guard let docURL = parent.fileURL else { return nil }
+
+            // Preserve-format types: write original bytes with matching
+            // extension so animations / quality / metadata survive. JPEG /
+            // GIF / HEIC don't have built-in NSPasteboard.PasteboardType
+            // constants on macOS, so use the UTI strings directly.
+            let preserveFormats: [(NSPasteboard.PasteboardType, String)] = [
+                (.png, "png"),
+                (NSPasteboard.PasteboardType("public.jpeg"), "jpg"),
+                (NSPasteboard.PasteboardType("com.compuserve.gif"), "gif"),
+                (NSPasteboard.PasteboardType("public.heic"), "heic"),
+            ]
+            var pickedData: Data?
+            var pickedExt: String?
+            for (type, ext) in preserveFormats {
+                if let data = pasteboard.data(forType: type) {
+                    pickedData = data
+                    pickedExt = ext
+                    break
+                }
+            }
+            // TIFF is macOS's generic image container — Cmd+Shift+Ctrl+4
+            // screenshots land here. Decode + re-encode to PNG so we don't
+            // drop a multi-MB uncompressed sibling next to the document.
+            if pickedData == nil,
+               let tiff = pasteboard.data(forType: .tiff),
+               let bitmap = NSBitmapImageRep(data: tiff),
+               let png = bitmap.representation(using: .png, properties: [:]) {
+                pickedData = png
+                pickedExt = "png"
+            }
+            guard let data = pickedData, let ext = pickedExt else { return nil }
+
+            do {
+                let result = try ImagePasteService.writeImageData(data, ext: ext, besidesDocumentAt: docURL, presenter: nil)
+                self.insertText(result.markdown)
+                return result.markdown
+            } catch {
+                DiagnosticLog.log("LiveEditor paste: writeImageData failed: \(error.localizedDescription)")
+                return nil
+            }
+        }
+
         private func scrollToOffset(_ offset: Int) {
             call(function: "scrollToOffset", payload: ["offset": offset])
         }
@@ -425,10 +530,26 @@ struct LiveEditorView: NSViewRepresentable {
                 guard LiveEditorSession.matches(documentID: parent.documentID),
                       let matchCount = body["matchCount"] as? Int,
                       let currentIndex = body["currentIndex"] as? Int else { return }
+                let regexError = body["regexError"] as? String
                 DispatchQueue.main.async {
                     guard self.parent.findState?.activeMode == .edit || self.parent.findState?.isVisible == false else { return }
                     self.parent.findState?.matchCount = matchCount
                     self.parent.findState?.currentIndex = currentIndex
+                    self.parent.findState?.resultsAreStale = false
+                    self.parent.findState?.regexError = regexError
+                    self.parent.findState?.lastReplaceCount = nil
+                }
+
+            case "replaceStatus":
+                guard LiveEditorSession.matches(documentID: parent.documentID),
+                      let replaceCount = body["replaceCount"] as? Int else { return }
+                DispatchQueue.main.async {
+                    guard self.parent.findState?.activeMode == .edit else { return }
+                    self.parent.findState?.lastReplaceCount = replaceCount
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+                    guard let self, self.parent.findState?.lastReplaceCount == replaceCount else { return }
+                    self.parent.findState?.lastReplaceCount = nil
                 }
 
             case "openLink":
