@@ -789,8 +789,14 @@ private struct SidebarSystemHighlightDisabler: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSView, context: Context) {
         DispatchQueue.main.async {
-            guard let window = nsView.window,
-                  let table = Self.findTableView(in: window.contentView) else { return }
+            // Scope the search to this view's own AppKit parent, not the
+            // whole window. In 3-pane mode the window contains TWO
+            // `NSTableView`s — the sidebar's and `MacNoteListView`'s — and a
+            // window-rooted depth-first search can return whichever AppKit
+            // wires up first, leaving the sidebar's source-list highlight
+            // alive. That manifests as bright-blue pills on stale sidebar
+            // rows when selection changes via the middle list.
+            guard let table = Self.findTableView(in: nsView.superview) else { return }
             if table.selectionHighlightStyle != .none {
                 table.selectionHighlightStyle = .none
             }
