@@ -139,6 +139,7 @@ struct MacNoteListView: View {
                 systemImage: "folder",
                 description: Text("Click a folder in the sidebar to see its notes here.")
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if isLoading && summaries.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -148,6 +149,7 @@ struct MacNoteListView: View {
                 systemImage: "doc.text",
                 description: Text("This folder has no markdown notes yet.")
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             List(summaries, selection: $selectedNoteURL) { note in
                 NoteListRow(note: note)
