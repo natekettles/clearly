@@ -92,12 +92,15 @@ struct MacNoteListView: View {
                   ? "rectangle.stack.fill"
                   : "rectangle")
                 .imageScale(.medium)
-                .foregroundStyle(isRecursive ? Color.accentColor : Color.secondary)
+                .foregroundStyle(.secondary)
         }
         .buttonStyle(.borderless)
         .help(isRecursive
               ? "Showing notes from subfolders. Click to show this folder only."
               : "Showing this folder only. Click to include subfolders.")
+        .accessibilityLabel(isRecursive
+                            ? "Showing notes from subfolders"
+                            : "Showing this folder only")
     }
 
     private var sortMenu: some View {

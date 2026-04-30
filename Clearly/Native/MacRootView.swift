@@ -19,6 +19,7 @@ struct MacRootView: View {
     @State private var showFormatPopover = false
     @State private var lastSidebarClickModifiers: NSEvent.ModifierFlags = []
     @State private var lastSidebarClickTime: Date? = nil
+    @State private var lastClickSource: ClickSource = .none
     @StateObject private var findState = FindState()
     @StateObject private var outlineState = OutlineState()
     @StateObject private var backlinksState = BacklinksState()
@@ -61,6 +62,7 @@ struct MacRootView: View {
                     .background(SidebarClickModifierWatcher { mods, time in
                         lastSidebarClickModifiers = mods
                         lastSidebarClickTime = time
+                        lastClickSource = .list
                     })
                     .navigationSplitViewColumnWidth(min: 220, ideal: 280, max: 420)
                 } detail: {
@@ -72,17 +74,24 @@ struct MacRootView: View {
         .navigationDocument(workspace.currentFileURL ?? URL(fileURLWithPath: "/"))
         .onChange(of: selectedFileURL) { _, newURL in
             guard let url = newURL else { return }
-            // Keep the 3-pane middle list in sync with sidebar navigation:
-            // selecting a file in the sidebar moves the active folder to
-            // its parent so the middle list scrolls to and highlights the
-            // file. Cheap no-op in 2-pane (selectedFolderURL just persists
-            // wherever the user was last). Skip pinned/recents that may
-            // live across vaults — `vaultIndexAndRelativePath` will reject
-            // anything outside a registered vault, so we can be liberal.
-            let parent = url.deletingLastPathComponent()
-            if workspace.selectedFolderURL?.standardizedFileURL != parent.standardizedFileURL,
-               workspace.vaultIndexAndRelativePath(for: parent) != nil {
-                workspace.setSelectedFolder(parent)
+            // Sidebar clicks on a file should also move the active folder to
+            // its parent, so the middle list scrolls to and highlights the
+            // file. List clicks must NOT do this — opening a note from the
+            // middle list keeps the user's current scope intact.
+            // `vaultIndexAndRelativePath` rejects anything outside a
+            // registered vault, so pinned/recents across vaults are safe.
+            let cameFromSidebar: Bool = {
+                guard lastClickSource == .sidebar,
+                      let t = lastSidebarClickTime,
+                      Date().timeIntervalSince(t) < 0.25 else { return false }
+                return true
+            }()
+            if cameFromSidebar {
+                let parent = url.deletingLastPathComponent()
+                if workspace.selectedFolderURL?.standardizedFileURL != parent.standardizedFileURL,
+                   workspace.vaultIndexAndRelativePath(for: parent) != nil {
+                    workspace.setSelectedFolder(parent)
+                }
             }
 
             guard workspace.currentFileURL != url else { return }
@@ -92,6 +101,7 @@ struct MacRootView: View {
             }()
             lastSidebarClickModifiers = []
             lastSidebarClickTime = nil
+            lastClickSource = .none
             if isCmdClick {
                 workspace.openFileInNewTab(at: url)
             } else {
@@ -114,6 +124,7 @@ struct MacRootView: View {
         .background(SidebarClickModifierWatcher { mods, time in
             lastSidebarClickModifiers = mods
             lastSidebarClickTime = time
+            lastClickSource = .sidebar
         })
         .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 360)
     }
@@ -146,6 +157,14 @@ struct MacRootView: View {
                 showFormatPopover: $showFormatPopover
             )
         }
+    }
+
+    /// Where the most recent left-mouse-down was observed. Lets the
+    /// `selectedFileURL` observer distinguish "sidebar click that should
+    /// move the active folder" from "list click that must NOT move the
+    /// active folder". Reset to `.none` after each consumed click.
+    private enum ClickSource {
+        case none, sidebar, list
     }
 
     private var windowTitle: String {
