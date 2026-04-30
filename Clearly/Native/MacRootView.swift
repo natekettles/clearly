@@ -39,18 +39,21 @@ struct MacRootView: View {
 
     @ViewBuilder
     private var splitView: some View {
-        Group {
-            switch layoutMode {
-            case .twoPane:
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    sidebarColumn
-                } detail: {
-                    detailColumn
-                }
-            case .threePane:
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    sidebarColumn
-                } content: {
+        // Always use the 3-column NavigationSplitView so toggling layoutMode
+        // doesn't change the SwiftUI generic specialization. Switching
+        // between `NavigationSplitView<S, EmptyView, D>` and
+        // `NavigationSplitView<S, C, D>` would tear down the entire detail
+        // column on every flip, forcing a fresh `WKWebView` and a sync
+        // WebContent-process initialization (font enumeration etc.) — a
+        // ~10s hang on `⌘⌥2` / `⌘⌥3`. By keeping a single specialization
+        // and conditionally collapsing the content column to zero width in
+        // 2-pane mode, the editor + preview survive the layout change.
+        let isThreePane = layoutMode == .threePane
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            sidebarColumn
+        } content: {
+            Group {
+                if isThreePane {
                     MacNoteListView(
                         workspace: workspace,
                         selectedNoteURL: $selectedFileURL
@@ -64,11 +67,17 @@ struct MacRootView: View {
                         lastSidebarClickTime = time
                         lastClickSource = .list
                     })
-                    .navigationSplitViewColumnWidth(min: 220, ideal: 280, max: 420)
-                } detail: {
-                    detailColumn
+                } else {
+                    Color.clear
                 }
             }
+            .navigationSplitViewColumnWidth(
+                min: isThreePane ? 220 : 0,
+                ideal: isThreePane ? 280 : 0,
+                max: isThreePane ? 420 : 0
+            )
+        } detail: {
+            detailColumn
         }
         .navigationTitle(windowTitle)
         .navigationDocument(workspace.currentFileURL ?? URL(fileURLWithPath: "/"))
