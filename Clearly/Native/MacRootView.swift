@@ -39,36 +39,17 @@ struct MacRootView: View {
 
     @ViewBuilder
     private var splitView: some View {
-        Group {
-            switch layoutMode {
-            case .twoPane:
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    sidebarColumn
-                } detail: {
-                    detailColumn
-                }
-            case .threePane:
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    sidebarColumn
-                } content: {
-                    MacNoteListView(
-                        workspace: workspace,
-                        selectedNoteURL: $selectedFileURL
-                    )
-                    // Same probe as the sidebar — lets the existing
-                    // `onChange(of: selectedFileURL)` handler route
-                    // cmd-clicks to `openFileInNewTab` when the user
-                    // picks a row in the list pane.
-                    .background(SidebarClickModifierWatcher { mods, time in
-                        lastSidebarClickModifiers = mods
-                        lastSidebarClickTime = time
-                        lastClickSource = .list
-                    })
-                    .navigationSplitViewColumnWidth(min: 220, ideal: 280, max: 420)
-                } detail: {
-                    detailColumn
-                }
-            }
+        // Always a 3-column NavigationSplitView so SwiftUI keeps the same
+        // structural identity across layout-mode flips. Switching the
+        // overload (2-col ↔ 3-col) would tear down the detail subtree —
+        // and with it the NSTextView, undo stack, and WKWebView — leaking
+        // observers and script-message handlers on every flip.
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            sidebarColumn
+        } content: {
+            middleColumn
+        } detail: {
+            detailColumn
         }
         .navigationTitle(windowTitle)
         .navigationDocument(workspace.currentFileURL ?? URL(fileURLWithPath: "/"))
@@ -112,6 +93,34 @@ struct MacRootView: View {
             if selectedFileURL != newURL {
                 selectedFileURL = newURL
             }
+        }
+    }
+
+    /// Middle column. In 3-pane mode, hosts the Notes-style list. In
+    /// 2-pane mode, collapses to a zero-width placeholder so the enclosing
+    /// `NavigationSplitView` keeps its 3-column shape — flipping shape
+    /// would destroy the detail subtree and rebuild the editor + WKWebView
+    /// from scratch on every toggle.
+    @ViewBuilder
+    private var middleColumn: some View {
+        if layoutMode == .threePane {
+            MacNoteListView(
+                workspace: workspace,
+                selectedNoteURL: $selectedFileURL
+            )
+            // Same probe as the sidebar — lets the existing
+            // `onChange(of: selectedFileURL)` handler route cmd-clicks to
+            // `openFileInNewTab` when the user picks a row in the list.
+            .background(SidebarClickModifierWatcher { mods, time in
+                lastSidebarClickModifiers = mods
+                lastSidebarClickTime = time
+                lastClickSource = .list
+            })
+            .navigationSplitViewColumnWidth(min: 220, ideal: 280, max: 420)
+        } else {
+            Color.clear
+                .frame(width: 0)
+                .navigationSplitViewColumnWidth(min: 0, ideal: 0, max: 0)
         }
     }
 
